@@ -1,11 +1,11 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Cell } from "./Cell";
 import LumberJackIcon from "@/assets/img/icons/cabin.svg";
 import WoodIcon from "@/assets/img/icons/wood.svg";
 
 export function LumberJackCell(){
 
-    let interval: NodeJS.Timeout | null = null;
+    let interval = null;
     let [count, setCount] = useState(0);
 
     function handleClick(){
