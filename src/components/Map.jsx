@@ -2,11 +2,14 @@ import { Cell } from "./Cell";
 import { useGameState } from "@/stores/GameState";
 export function Map() {
 
-    const { cells, updateCellType } = useGameState((state) => state);
+    const { cells, updateCellType, addCellPeople } = useGameState((state) => state);
 
-    function handleClick(position) {
-        // Try create house
-        updateCellType('house', position);
+    function handleClick(cell, position) {
+        if(cell.type === 'empty'){
+            updateCellType('house', position);
+        } else if(cell.type === 'forest'){
+            addCellPeople(position, 1);
+        }
     }
 
     return (
@@ -16,7 +19,8 @@ export function Map() {
                     return row.map((cell, colIndex) => {
                         return <Cell 
                             type={cell.type} 
-                            onClick={()=>handleClick({ x: colIndex, y: rowIndex })}
+                            people={cell.people}
+                            onClick={()=>handleClick(cell, { x: colIndex, y: rowIndex })}
                             key={`${colIndex}-${rowIndex}`}
                         />;
                     });

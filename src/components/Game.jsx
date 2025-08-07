@@ -4,6 +4,7 @@ import { Map } from "./Map";
 import { useEffect, useState } from "react";
 import { useGameState } from "@/stores/GameState";
 import { useNavigate } from "react-router-dom";
+import { SeasonModal } from "./modals/SeasonModal";
 
 const defaultQuests = [
     {
@@ -41,11 +42,12 @@ export function Game({ onGameOver }) {
     // hooks
     const navigate = useNavigate();
     // states
-    const { food , time } = useGameState();
+    const { food , time, season } = useGameState();
     // actions
-    const { addTime, consumeFood, reset, setScore } = useGameState();
+    const { addTime, consumeFood, generateResources, reset, setScore } = useGameState();
 
     const [quests, setQuests] = useState(defaultQuests);
+    const [showModal, setShowModal] = useState(false);
 
 
     function handleValidateQuest(questId){
@@ -69,7 +71,7 @@ export function Game({ onGameOver }) {
     },[]);
 
     useEffect(() => {
-        if(time % 1 == 0){
+        if(time % 10 == 0){
             if(food <= 1){
                 //onGameOver(time);
                 setScore(time);
@@ -78,7 +80,14 @@ export function Game({ onGameOver }) {
             }
             consumeFood();
         }
+        if(time % 5 == 0){
+            generateResources();
+        }
     }, [time]);
+
+    useEffect(() => {
+        setShowModal(true);
+    }, [season]);
 
     return (
         <div className="w-full h-full flex flex-col justify-start items-center bg-blue-50 p-2">
@@ -87,6 +96,7 @@ export function Game({ onGameOver }) {
                 <ResourcePanel/>
             </div>
             <Map />
+            <SeasonModal isOpen={showModal} onOpenChange={setShowModal}/>
         </div>
     );
 }

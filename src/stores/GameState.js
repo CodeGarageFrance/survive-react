@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-const defaultMap = new Array(5).fill(null).map(() => new Array(5).fill({ type: 'empty' }));
-defaultMap[0][0] = { type: 'forest' };
-defaultMap[4][4] = { type: 'forest' };
+const defaultMap = new Array(5).fill(null).map(() => new Array(5).fill({ type: 'empty', people: 0 }));
+defaultMap[0][0] = { type: 'forest', people: 0 };
+defaultMap[4][4] = { type: 'forest', people: 0 };
 
 export const useGameState = create((set, get) => ({
     // State
@@ -12,10 +12,19 @@ export const useGameState = create((set, get) => ({
     people: 0,
     time: 0,
     score: 0,
+    season: 'summer',
     cells: [...defaultMap],
     // Getters
     getAvailablePeople: () => {
-        return get().people;
+        const totalPeople = get().people;
+        const cells = get().cells;
+        const workingPeople = cells.reduce((sum, row) => {
+            return sum + row.reduce((rowSum, cell) => {
+                return rowSum + cell.people;
+            }, 0);
+        }
+        , 0);
+        return totalPeople - workingPeople;
     },
     // Setters
     setStone: (stone) => set({ stone }),
@@ -23,7 +32,14 @@ export const useGameState = create((set, get) => ({
     setFood: (food) => set({ food }),
     setPeople: (people) => set({ people }),
     setScore: (score) => set({ score }),
-    addTime: (val) => set(() => ({ time: get().time + val })),
+    setSeason: (season) => set({ season }),
+    addTime: (val) => {
+        const { time, season } = get();
+        if(time % 30 === 0 && time > 0){
+            set({ season: season == 'winter' ? 'summer' : 'winter' });
+        }
+        set({ time: time + val });
+    },
     reset: () => {
         set({
             stone: 0,
@@ -31,6 +47,7 @@ export const useGameState = create((set, get) => ({
             food: 10,
             people: 0,
             time: 0,
+            season: 'summer',
             cells: [...defaultMap],
         });
     },
@@ -62,5 +79,32 @@ export const useGameState = create((set, get) => ({
         }
         updatedCells[position.y][position.x] = cell;
         set({ cells: updatedCells });
+    },
+    addCellPeople: (position, val) => {
+        if(get().getAvailablePeople() <= 0){
+            return;
+        }
+        const cells  = get().cells;
+        const updatedCells = cells.map((row) => row.map((cell) => ({ ...cell })));
+        let cell = updatedCells[position.y][position.x];
+        cell.people = cell.people + val;
+        updatedCells[position.y][position.x] = cell;
+        set({ cells: updatedCells });
+    },
+    generateResources: () => {
+        const {cells, food, wood, season}  = get();
+        const resources = { food: 0, wood: 0 };
+        cells.forEach((row) => {
+            row.forEach((cell) => {
+                if(cell.type === 'forest'){
+                    resources.wood += cell.people;
+                    if(season === 'summer'){
+                        resources.food += cell.people;
+                    }
+                    resources.food += cell.people;
+                }
+            });
+        });
+        set({ food: food + resources.food, wood: wood + resources.wood });
     },
 }));
